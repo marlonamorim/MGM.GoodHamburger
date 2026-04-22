@@ -49,7 +49,9 @@ Antes de executar, certifique-se de que:
 
 ### 1️⃣ Configurar URL da API
 
-Edite o arquivo `wwwroot/appsettings.json`:
+A aplicação lê a URL da API do arquivo `wwwroot/appsettings.json`.
+
+Edite o arquivo conforme necessário:
 
 ```json
 {
@@ -58,6 +60,11 @@ Edite o arquivo `wwwroot/appsettings.json`:
   }
 }
 ```
+
+**Importante:** 
+- A aplicação **não** irá iniciar se esta configuração estiver ausente ou inválida
+- Para ambientes diferentes (Desenvolvimento, Produção), basta alterar a URL neste arquivo
+- Não é necessário recompilar o projeto, apenas atualizar o arquivo `appsettings.json`
 
 ### 2️⃣ Verificar CORS na API
 
@@ -70,7 +77,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp", policy =>
     {
-        policy.WithOrigins("https://localhost:7242", "http://localhost:5046")
+        policy.WithOrigins("https://localhost:7239", "http://localhost:5046")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -99,7 +106,7 @@ dotnet run
 ```
 
 A aplicação estará disponível em:
-- **HTTPS**: `https://localhost:7242`
+- **HTTPS**: `https://localhost:7239`
 - **HTTP**: `http://localhost:5046`
 
 ---

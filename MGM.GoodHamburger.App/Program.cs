@@ -7,16 +7,17 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// Obter a URL da API do appsettings.json
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]
+    ?? throw new InvalidOperationException("ApiSettings:BaseUrl não está configurada no appsettings.json");
+
 // Configurar HttpClient com a URL base da API
-builder.Services.AddScoped(sp => new HttpClient 
-{ 
-    BaseAddress = new Uri("https://localhost:7098") // URL da API
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(apiBaseUrl)
 });
 
-// Registrar o MenuService
 builder.Services.AddScoped<MenuService>();
-
-// Registrar o OrderService
 builder.Services.AddScoped<OrderService>();
 
 // Registrar o CartService como singleton para manter o estado do carrinho
