@@ -1,0 +1,45 @@
+﻿@using MGM.GoodHamburger.App.Services
+@inject CartService CartService
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+@inherits LayoutComponentBase
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="cart" class="cart-link" @onclick="GoToCart" @onclick:preventDefault="true" style="cursor: pointer; text-decoration: none;">
+                <i class="bi bi-cart3"></i>
+                <span class="ms-2">Carrinho</span>
+                @if (CartService.ItemCount > 0)
+                {
+                    <span class="badge bg-danger rounded-pill ms-2">@CartService.ItemCount</span>
+                }
+            </a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    private void GoToCart()
+    {
+        NavigationManager.NavigateTo("/cart");
+    }
+}

@@ -1,0 +1,333 @@
+@page "/cart"
+@using MGM.GoodHamburger.App.Services
+@using static MGM.GoodHamburger.App.Services.CartService
+@inject CartService CartService
+@inject OrderService OrderService
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<PageTitle>Carrinho - Good Hamburger</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-cart3"></i> Meu Carrinho
+    </h1>
+
+    @if (!CartService.Items.Any())
+    {
+        <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-cart-x"></i> Carrinho Vazio
+            </h5>
+            <p class="mb-0">Você ainda não adicionou itens ao carrinho.</p>
+            <hr>
+            <button class="btn btn-primary mt-2" @onclick="GoToMenu">
+                <i class="bi bi-arrow-left"></i> Voltar ao Cardápio
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col" style="width: 40%;">Item</th>
+                                <th scope="col" style="width: 20%;" class="text-center">Quantidade</th>
+                                <th scope="col" style="width: 20%;" class="text-end">Preço Unit.</th>
+                                <th scope="col" style="width: 15%;" class="text-end">Subtotal</th>
+                                <th scope="col" style="width: 5%;" class="text-center">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in CartService.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (item.MenuItem.Type.Equals("Sandwich", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <i class="bi bi-emoji-smile text-warning"></i>
+                                        }
+                                        else if (item.MenuItem.Type.Equals("SideDish", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <i class="bi bi-basket text-primary"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-cup-straw text-info"></i>
+                                        }
+                                        <strong>@item.MenuItem.Name</strong>
+                                        <br>
+                                        <small class="text-muted">@GetTypeLabel(item.MenuItem.Type)</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => DecreaseQuantity(item)">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                @item.Quantity
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => IncreaseQuantity(item)">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        @item.MenuItem.Price.ToString("C2")
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>@item.Subtotal.ToString("C2")</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-danger btn-sm" @onclick="() => RemoveItem(item)" title="Remover item">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end">
+                                    <strong>Subtotal:</strong>
+                                </td>
+                                <td class="text-end">
+                                    <strong>@CartService.Subtotal.ToString("C2")</strong>
+                                </td>
+                                <td></td>
+                            </tr>
+                            @if (CartService.DiscountPercentage > 0)
+                            {
+                                <tr class="table-success">
+                                    <td colspan="3" class="text-end">
+                                        <strong>
+                                            <i class="bi bi-tag-fill"></i> Desconto (@CartService.DiscountPercentage%):
+                                        </strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">
+                                            -@CartService.DiscountAmount.ToString("C2")
+                                        </strong>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            }
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end">
+                                    <h5 class="mb-0"><strong>Total:</strong></h5>
+                                </td>
+                                <td class="text-end">
+                                    <h5 class="mb-0 text-success">
+                                        <strong>@CartService.Total.ToString("C2")</strong>
+                                    </h5>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informação de Descontos -->
+        @if (CartService.DiscountPercentage > 0)
+        {
+            <div class="alert alert-success mt-4" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-check-circle-fill"></i> Desconto Aplicado!
+                </h5>
+                <hr>
+                <p class="mb-0">
+                    <strong>@CartService.DiscountPercentage% de desconto</strong> aplicado no seu pedido.
+                    @if (CartService.DiscountPercentage == 20)
+                    {
+                        <span>Você economizou com o Combo Completo!</span>
+                    }
+                    else if (CartService.DiscountPercentage == 15)
+                    {
+                        <span>Adicione um acompanhamento para ganhar 20% de desconto!</span>
+                    }
+                    else if (CartService.DiscountPercentage == 10)
+                    {
+                        <span>Adicione uma bebida para ganhar até 20% de desconto!</span>
+                    }
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mt-4" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-tag-fill"></i> Descontos Especiais!
+                </h5>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>10% OFF</strong> - Hambúrguer + Acompanhamento</li>
+                    <li><strong>15% OFF</strong> - Hambúrguer + Bebida</li>
+                    <li><strong>20% OFF</strong> - Combo Completo (Hambúrguer + Acompanhamento + Bebida)</li>
+                </ul>
+                <small class="text-muted mt-2 d-block">
+                    Adicione mais itens ao carrinho para aproveitar os descontos!
+                </small>
+            </div>
+        }
+
+        <!-- Mensagens de Feedback -->
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+                <i class="bi bi-check-circle-fill"></i> <strong>@successMessage</strong>
+                <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> <strong>@errorMessage</strong>
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+            </div>
+        }
+
+        <!-- Botões de Ação -->
+        <div class="d-flex justify-content-between mt-4 mb-5">
+            <button class="btn btn-secondary btn-lg" @onclick="GoToMenu" disabled="@isProcessingOrder">
+                <i class="bi bi-arrow-left"></i> Voltar ao Cardápio
+            </button>
+            <div>
+                <button class="btn btn-outline-danger btn-lg me-2" @onclick="ClearCart" disabled="@isProcessingOrder">
+                    <i class="bi bi-trash"></i> Limpar Carrinho
+                </button>
+                <button class="btn btn-success btn-lg" @onclick="Checkout" disabled="@isProcessingOrder">
+                    @if (isProcessingOrder)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Processando...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-circle"></i>
+                        <span>Finalizar Pedido</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isProcessingOrder = false;
+    private string? successMessage;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    private void RemoveItem(CartItem item)
+    {
+        CartService.RemoveItem(item.MenuItem.Id);
+    }
+
+    private void IncreaseQuantity(CartItem item)
+    {
+        CartService.UpdateQuantity(item.MenuItem.Id, item.Quantity + 1);
+    }
+
+    private void DecreaseQuantity(CartItem item)
+    {
+        if (item.Quantity > 1)
+        {
+            CartService.UpdateQuantity(item.MenuItem.Id, item.Quantity - 1);
+        }
+        else
+        {
+            CartService.RemoveItem(item.MenuItem.Id);
+        }
+    }
+
+    private void ClearCart()
+    {
+        CartService.Clear();
+    }
+
+    private void GoToMenu()
+    {
+        NavigationManager.NavigateTo("/menu");
+    }
+
+    private async Task Checkout()
+    {
+        if (isProcessingOrder) return;
+
+        try
+        {
+            isProcessingOrder = true;
+            successMessage = null;
+            errorMessage = null;
+
+            // Obter os IDs dos itens no carrinho
+            var (sandwichId, sideDishId, drinkId) = CartService.GetItemIdsForOrder();
+
+            // Validar se há pelo menos um item
+            if (!sandwichId.HasValue && !sideDishId.HasValue && !drinkId.HasValue)
+            {
+                errorMessage = "O carrinho está vazio!";
+                return;
+            }
+
+            // Criar o request para a API
+            var orderRequest = new CreateOrderRequest
+            {
+                SandwichId = sandwichId,
+                SideDishId = sideDishId,
+                DrinkId = drinkId
+            };
+
+            // Chamar a API para criar o pedido
+            var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
+
+            if (orderResponse != null)
+            {
+                successMessage = $"Pedido #{orderResponse.Id.ToString().Substring(0, 8)} criado com sucesso! Total: {orderResponse.Total:C2}";
+
+                // Limpar o carrinho após sucesso
+                CartService.Clear();
+
+                // Aguardar 3 segundos e navegar para o menu
+                await Task.Delay(3000);
+                NavigationManager.NavigateTo("/orders");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao finalizar pedido: {ex.Message}";
+            Console.WriteLine($"Erro detalhado: {ex}");
+        }
+        finally
+        {
+            isProcessingOrder = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetTypeLabel(string type)
+    {
+        return type.ToLower() switch
+        {
+            "sandwich" => "Hambúrguer",
+            "sidedish" => "Acompanhamento",
+            "drink" => "Bebida",
+            _ => type
+        };
+    }
+}

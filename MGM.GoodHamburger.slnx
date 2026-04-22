@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="MGM.GoodHamburger.Api/MGM.GoodHamburger.Api.csproj" Id="5a433837-a0c6-4fe1-a077-a14fb23ca5d0" />
+  <Project Path="MGM.GoodHamburger.App/MGM.GoodHamburger.App.csproj" Id="79bd33a9-adf4-48c8-9498-e77b405bde4f" />
   <Project Path="MGM.GoodHamburger.Application/MGM.GoodHamburger.Application.csproj" />
   <Project Path="MGM.GoodHamburger.Domain/MGM.GoodHamburger.Domain.csproj" />
   <Project Path="MGM.GoodHamburger.Infrastructure/MGM.GoodHamburger.Infrastructure.csproj" />

@@ -1,0 +1,285 @@
+@page "/"
+@page "/menu"
+@using MGM.GoodHamburger.App.Models
+@using MGM.GoodHamburger.App.Services
+@inject MenuService MenuService
+@inject CartService CartService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Cardápio - Good Hamburger</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-card-list"></i> Cardápio
+    </h1>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Carregando cardápio...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <!-- Abas de Navegação -->
+        <ul class="nav nav-tabs mb-4" id="menuTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(activeTab == "sandwiches" ? "active" : "")" 
+                        id="sandwiches-tab" 
+                        type="button" 
+                        role="tab"
+                        @onclick="@(() => SetActiveTab("sandwiches"))">
+                    <i class="bi bi-emoji-smile"></i> Hambúrgueres
+                    <span class="badge bg-primary rounded-pill ms-2">@sandwiches.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(activeTab == "sideDishes" ? "active" : "")" 
+                        id="sideDishes-tab" 
+                        type="button" 
+                        role="tab"
+                        @onclick="@(() => SetActiveTab("sideDishes"))">
+                    <i class="bi bi-basket"></i> Acompanhamentos
+                    <span class="badge bg-primary rounded-pill ms-2">@sideDishes.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(activeTab == "drinks" ? "active" : "")" 
+                        id="drinks-tab" 
+                        type="button" 
+                        role="tab"
+                        @onclick="@(() => SetActiveTab("drinks"))">
+                    <i class="bi bi-cup-straw"></i> Bebidas
+                    <span class="badge bg-primary rounded-pill ms-2">@drinks.Count</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content" id="menuTabContent">
+            <!-- Aba Hambúrgueres -->
+            @if (activeTab == "sandwiches")
+            {
+                <div class="tab-pane fade show active">
+                    @if (sandwiches.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col" style="width: 10%;">#</th>
+                                        <th scope="col" style="width: 45%;">Nome</th>
+                                        <th scope="col" style="width: 25%;" class="text-end">Preço</th>
+                                        <th scope="col" style="width: 20%;" class="text-center">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in sandwiches)
+                                    {
+                                        <tr>
+                                            <td><strong>@item.Id</strong></td>
+                                            <td>
+                                                <i class="bi bi-emoji-smile text-warning"></i>
+                                                <strong>@item.Name</strong>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-success fs-6">
+                                                    @item.Price.ToString("C2")
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(item)">
+                                                    <i class="bi bi-cart-plus"></i> Adicionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Nenhum hambúrguer disponível no momento.
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Aba Acompanhamentos -->
+            @if (activeTab == "sideDishes")
+            {
+                <div class="tab-pane fade show active">
+                    @if (sideDishes.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col" style="width: 10%;">#</th>
+                                        <th scope="col" style="width: 45%;">Nome</th>
+                                        <th scope="col" style="width: 25%;" class="text-end">Preço</th>
+                                        <th scope="col" style="width: 20%;" class="text-center">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in sideDishes)
+                                    {
+                                        <tr>
+                                            <td><strong>@item.Id</strong></td>
+                                            <td>
+                                                <i class="bi bi-basket text-primary"></i>
+                                                <strong>@item.Name</strong>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-success fs-6">
+                                                    @item.Price.ToString("C2")
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(item)">
+                                                    <i class="bi bi-cart-plus"></i> Adicionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Nenhum acompanhamento disponível no momento.
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Aba Bebidas -->
+            @if (activeTab == "drinks")
+            {
+                <div class="tab-pane fade show active">
+                    @if (drinks.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col" style="width: 10%;">#</th>
+                                        <th scope="col" style="width: 45%;">Nome</th>
+                                        <th scope="col" style="width: 25%;" class="text-end">Preço</th>
+                                        <th scope="col" style="width: 20%;" class="text-center">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in drinks)
+                                    {
+                                        <tr>
+                                            <td><strong>@item.Id</strong></td>
+                                            <td>
+                                                <i class="bi bi-cup-straw text-info"></i>
+                                                <strong>@item.Name</strong>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-success fs-6">
+                                                    @item.Price.ToString("C2")
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(item)">
+                                                    <i class="bi bi-cart-plus"></i> Adicionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Nenhuma bebida disponível no momento.
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Informação de Descontos -->
+        <div class="alert alert-warning mt-4" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-tag-fill"></i> Descontos Especiais!
+            </h5>
+            <hr>
+            <ul class="mb-0">
+                <li><strong>10% OFF</strong> - Hambúrguer + Acompanhamento</li>
+                <li><strong>15% OFF</strong> - Hambúrguer + Bebida</li>
+                <li><strong>20% OFF</strong> - Combo Completo (Hambúrguer + Acompanhamento + Bebida)</li>
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    private List<MenuItemDto> allItems = new();
+    private List<MenuItemDto> sandwiches = new();
+    private List<MenuItemDto> sideDishes = new();
+    private List<MenuItemDto> drinks = new();
+    
+    private string activeTab = "sandwiches";
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenuItems();
+    }
+
+    private async Task LoadMenuItems()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            allItems = await MenuService.GetAllMenuItemsAsync();
+
+            // Separar itens por tipo
+            sandwiches = allItems.Where(i => i.Type.Equals("Sandwich", StringComparison.OrdinalIgnoreCase)).ToList();
+            sideDishes = allItems.Where(i => i.Type.Equals("SideDish", StringComparison.OrdinalIgnoreCase)).ToList();
+            drinks = allItems.Where(i => i.Type.Equals("Drink", StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao carregar o cardápio: {ex.Message}";
+            Console.WriteLine($"Erro: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private void AddToCart(MenuItemDto item)
+    {
+        CartService.AddItem(item);
+        // Opcional: Mostrar mensagem de sucesso
+    }
+}

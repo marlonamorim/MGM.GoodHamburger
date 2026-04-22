@@ -1,0 +1,229 @@
+@page "/orders"
+@using MGM.GoodHamburger.App.Services
+@inject OrderService OrderService
+
+<PageTitle>Pedidos - Good Hamburger</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-receipt"></i> Meus Pedidos
+    </h1>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Carregando pedidos...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadOrders">
+            <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+        </button>
+    }
+    else if (!orders.Any())
+    {
+        <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-info-circle"></i> Nenhum Pedido Encontrado
+            </h5>
+            <p class="mb-0">Você ainda não realizou nenhum pedido.</p>
+            <hr>
+            <a href="/" class="btn btn-primary mt-2">
+                <i class="bi bi-card-list"></i> Ir para o Cardápio
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <p class="text-muted">
+                    <i class="bi bi-info-circle"></i> Total de pedidos: <strong>@orders.Count</strong>
+                </p>
+            </div>
+            <div class="col text-end">
+                <button class="btn btn-outline-primary btn-sm" @onclick="LoadOrders">
+                    <i class="bi bi-arrow-clockwise"></i> Atualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" style="width: 15%;">Pedido #</th>
+                        <th scope="col" style="width: 15%;">Data</th>
+                        <th scope="col" style="width: 35%;">Itens</th>
+                        <th scope="col" style="width: 10%;" class="text-center">Desconto</th>
+                        <th scope="col" style="width: 12%;" class="text-end">Subtotal</th>
+                        <th scope="col" style="width: 13%;" class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in orders.OrderByDescending(o => o.CreatedAt))
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">
+                                    #@order.Id.ToString().Substring(0, 8)
+                                </span>
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="bi bi-calendar3"></i>
+                                    @order.CreatedAt.ToString("dd/MM/yyyy")
+                                    <br>
+                                    <i class="bi bi-clock"></i>
+                                    @order.CreatedAt.ToString("HH:mm:ss")
+                                </small>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    @if (order.Sandwich != null)
+                                    {
+                                        <span>
+                                            <i class="bi bi-emoji-smile text-warning"></i>
+                                            <strong>@order.Sandwich.Name</strong>
+                                            <small class="text-muted">(@order.Sandwich.Price.ToString("C2"))</small>
+                                        </span>
+                                    }
+                                    @if (order.SideDish != null)
+                                    {
+                                        <span>
+                                            <i class="bi bi-basket text-primary"></i>
+                                            <strong>@order.SideDish.Name</strong>
+                                            <small class="text-muted">(@order.SideDish.Price.ToString("C2"))</small>
+                                        </span>
+                                    }
+                                    @if (order.Drink != null)
+                                    {
+                                        <span>
+                                            <i class="bi bi-cup-straw text-info"></i>
+                                            <strong>@order.Drink.Name</strong>
+                                            <small class="text-muted">(@order.Drink.Price.ToString("C2"))</small>
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @if (order.DiscountPercentage > 0)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-tag-fill"></i> @order.DiscountPercentage%
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <span class="text-muted">
+                                    @order.Subtotal.ToString("C2")
+                                </span>
+                                @if (order.DiscountAmount > 0)
+                                {
+                                    <br>
+                                    <small class="text-success">
+                                        -@order.DiscountAmount.ToString("C2")
+                                    </small>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <strong class="fs-5 text-success">
+                                    @order.Total.ToString("C2")
+                                </strong>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="5" class="text-end">
+                            <strong>Total Geral:</strong>
+                        </td>
+                        <td class="text-end">
+                            <h5 class="mb-0 text-success">
+                                <strong>@orders.Sum(o => o.Total).ToString("C2")</strong>
+                            </h5>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-receipt fs-1 text-primary"></i>
+                        <h5 class="card-title mt-2">Total de Pedidos</h5>
+                        <p class="card-text fs-4"><strong>@orders.Count</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-tag-fill fs-1 text-success"></i>
+                        <h5 class="card-title mt-2">Economia Total</h5>
+                        <p class="card-text fs-4 text-success">
+                            <strong>@orders.Sum(o => o.DiscountAmount).ToString("C2")</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-currency-dollar fs-1 text-primary"></i>
+                        <h5 class="card-title mt-2">Valor Total</h5>
+                        <p class="card-text fs-4 text-success">
+                            <strong>@orders.Sum(o => o.Total).ToString("C2")</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<OrderResponse> orders = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            orders = await OrderService.GetAllOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao carregar pedidos: {ex.Message}";
+            Console.WriteLine($"Erro: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
